@@ -142,7 +142,7 @@ helpers.findNearestObjectDirectionAndDistance = function(board, fromTile, tileCa
 };
 
 // Returns the direction of the nearest non-team diamond mine or false, if there are no diamond mines
-helpers.findNearestNonTeamDiamondMine = function(gameData) {
+helpers.findNearestNonTeamDiamondMine = function(gameData, returnFullStats) {
   var hero = gameData.activeHero;
   var board = gameData.board;
 
@@ -160,11 +160,11 @@ helpers.findNearestNonTeamDiamondMine = function(gameData) {
   }, board);
 
   //Return the direction that needs to be taken to achieve the goal
-  return pathInfoObject.direction;
+  return returnFullStats ? pathInfoObject : pathInfoObject.direction;
 };
 
 // Returns the nearest unowned diamond mine or false, if there are no diamond mines
-helpers.findNearestUnownedDiamondMine = function(gameData) {
+helpers.findNearestUnownedDiamondMine = function(gameData, returnFullStats) {
   var hero = gameData.activeHero;
   var board = gameData.board;
 
@@ -182,11 +182,11 @@ helpers.findNearestUnownedDiamondMine = function(gameData) {
   });
 
   //Return the direction that needs to be taken to achieve the goal
-  return pathInfoObject.direction;
+  return returnFullStats ? pathInfoObject : pathInfoObject.direction;
 };
 
 // Returns the nearest health well or false, if there are no health wells
-helpers.findNearestHealthWell = function(gameData) {
+helpers.findNearestHealthWell = function(gameData, returnFullStats) {
   var hero = gameData.activeHero;
   var board = gameData.board;
 
@@ -196,12 +196,12 @@ helpers.findNearestHealthWell = function(gameData) {
   });
 
   //Return the direction that needs to be taken to achieve the goal
-  return pathInfoObject.direction;
+  return returnFullStats ? pathInfoObject : pathInfoObject.direction;
 };
 
 // Returns the direction of the nearest enemy with lower health
 // (or returns false if there are no accessible enemies that fit this description)
-helpers.findNearestWeakerEnemy = function(gameData) {
+helpers.findNearestWeakerEnemy = function(gameData, returnFullStats) {
   var hero = gameData.activeHero;
   var board = gameData.board;
 
@@ -213,12 +213,12 @@ helpers.findNearestWeakerEnemy = function(gameData) {
   //Return the direction that needs to be taken to achieve the goal
   //If no weaker enemy exists, will simply return undefined, which will
   //be interpreted as "Stay" by the game object
-  return pathInfoObject.direction;
+  return returnFullStats ? pathInfoObject : pathInfoObject.direction;
 };
 
 // Returns the direction of the nearest enemy
 // (or returns false if there are no accessible enemies)
-helpers.findNearestEnemy = function(gameData) {
+helpers.findNearestEnemy = function(gameData, returnFullStats) {
   var hero = gameData.activeHero;
   var board = gameData.board;
 
@@ -228,12 +228,12 @@ helpers.findNearestEnemy = function(gameData) {
   });
 
   //Return the direction that needs to be taken to achieve the goal
-  return pathInfoObject.direction;
+  return returnFullStats ? pathInfoObject : pathInfoObject.direction;
 };
 
 // Returns the direction of the nearest friendly champion
 // (or returns false if there are no accessible friendly champions)
-helpers.findNearestTeamMember = function(gameData) {
+helpers.findNearestTeamMember = function(gameData, returnFullStats) {
   var hero = gameData.activeHero;
   var board = gameData.board;
 
@@ -243,7 +243,23 @@ helpers.findNearestTeamMember = function(gameData) {
   });
 
   //Return the direction that needs to be taken to achieve the goal
-  return pathInfoObject.direction;
+  return returnFullStats ? pathInfoObject : pathInfoObject.direction;
 };
+
+// Picks closest tile from array of potential targets
+// Errs on side of earlier targets
+helpers.pickNearestTarget = function( targets ) {
+    var nearestIndex = -1;
+    var nearestDistance = 100;
+
+    for( var i = 0, l = targets.length; i < l; i++ ) {
+        if( targets[ i ].distance < nearestDistance ) {
+            nearestIndex = i;
+            nearestDistance = targets[ i ].distance;
+        }
+    }
+
+    return nearestIndex;
+}
 
 module.exports = helpers;

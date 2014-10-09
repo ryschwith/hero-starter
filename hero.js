@@ -1,4 +1,4 @@
-/* 
+/*
 
   The only function that is required in this file is the "move" function
 
@@ -9,8 +9,8 @@
 
   The "move" function must return "North", "South", "East", "West", or "Stay"
   (Anything else will be interpreted by the game as "Stay")
-  
-  The "move" function should accept two arguments that the website will be passing in: 
+
+  The "move" function should accept two arguments that the website will be passing in:
     - a "gameData" object which holds all information about the current state
       of the battle
 
@@ -80,30 +80,63 @@
 // };
 
 // // The "Safe Diamond Miner"
-var move = function(gameData, helpers) {
-  var myHero = gameData.activeHero;
+//var move = function(gameData, helpers) {
+//  var myHero = gameData.activeHero;
 
-  //Get stats on the nearest health well
-  var healthWellStats = helpers.findNearestObjectDirectionAndDistance(gameData.board, myHero, function(boardTile) {
-    if (boardTile.type === 'HealthWell') {
-      return true;
+//  //Get stats on the nearest health well
+//  var healthWellStats = helpers.findNearestObjectDirectionAndDistance(gameData.board, myHero, function(boardTile) {
+//    if (boardTile.type === 'HealthWell') {
+//      return true;
+//    }
+//  });
+//  var distanceToHealthWell = healthWellStats.distance;
+//  var directionToHealthWell = healthWellStats.direction;
+
+
+//  if (myHero.health < 40) {
+//    //Heal no matter what if low health
+//    return directionToHealthWell;
+//  } else if (myHero.health < 100 && distanceToHealthWell === 1) {
+//    //Heal if you aren't full health and are close to a health well already
+//    return directionToHealthWell;
+//  } else {
+//    //If healthy, go capture a diamond mine!
+//    return helpers.findNearestNonTeamDiamondMine(gameData);
+//  }
+//};
+
+// Unnamed
+// First attempt. Will decide between killing nearby weak enemies or capturing nearby mines
+var move = function( gameData, helpers ) {
+    var HERO = gameData.activeHero;
+    var INJURY_THRESHOLD = 40;
+    var targets = new Array();
+    var nearestIndex;
+
+    // If severely injured, find healing
+    if( HERO.health < INJURY_THRESHOLD ) {
+        return helpers.findNearestHealthWell( gameData );
     }
-  });
-  var distanceToHealthWell = healthWellStats.distance;
-  var directionToHealthWell = healthWellStats.direction;
-  
 
-  if (myHero.health < 40) {
-    //Heal no matter what if low health
-    return directionToHealthWell;
-  } else if (myHero.health < 100 && distanceToHealthWell === 1) {
-    //Heal if you aren't full health and are close to a health well already
-    return directionToHealthWell;
-  } else {
-    //If healthy, go capture a diamond mine!
-    return helpers.findNearestNonTeamDiamondMine(gameData);
-  }
-};
+    // Look for nearest weak enemy, enemy mine, or unclaimed mine
+    targets.push( helpers.findNearestWeakerEnemy( gameData, true ) );
+    targets.push( helpers.findNearestNonTeamDiamondMine( gameData, true ) );
+    targets.push( helpers.findNearestUnownedDiamondMine( gameData, true ) );
+    nearestIndex = helpers.pickNearestTarget( targets );
+
+    // If no weak enemies or non-team mines are nearby, seek out a team member to heal or a stronger enemy
+    if( nearestIndex < 0 ) {
+        var nearestTeamMember = helpers.findNearestTeamMember( gameData );
+
+        if( typeof nearestTeamMember === "undefined" ) {
+            return helpers.findNearestEnemy( gameData );
+        }
+        return nearestTeamMember;
+    }
+
+    // Otherwise go to nearest target
+    return targets[ nearestIndex ].direction;
+}
 
 // // The "Selfish Diamond Miner"
 // // This hero will attempt to capture diamond mines (even those owned by teammates).
