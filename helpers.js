@@ -34,6 +34,21 @@ helpers.getTileNearby = function(board, distanceFromTop, distanceFromLeft, direc
   }
 };
 
+helpers.moveAwayFrom = function( dir ) {
+    switch( dir ) {
+        case "North":
+            return "South";
+        case "South":
+            return "North";
+        case "East":
+            return "West";
+        case "West":
+            return "East";
+        default:
+            return "Stay";
+    }
+}
+
 // Returns an object with certain properties of the nearest object we are looking for
 helpers.findNearestObjectDirectionAndDistance = function(board, fromTile, tileCallback) {
   // Storage queue to keep track of places the fromTile has been
@@ -260,6 +275,71 @@ helpers.pickNearestTarget = function( targets ) {
     }
 
     return nearestIndex;
+}
+
+// Following is the helpers.assessment object, which attempts to add more situational awareness to the hero
+helpers.assessment = {
+    countPlayersByTeam: function( game, team ) {
+        var hero = game.activeHero,
+            players = game.heroes,
+            count = 0;
+
+        for( var i = 0, l = players.length; i < l; i++ ) {
+            var p = players[ i ];
+            if( p !== hero && p.dead === false && p.team == team ) {
+                count++;
+            }
+        }
+
+        return count;
+    },
+    countAllies: function( game ) {
+        return this.countPlayersByTeam( game, game.activeHero.team );
+    },
+    countEnemies: function( game ) {
+        return this.countPlayersByTeam( game, !game.activeHero.team ); // this only works when there are exactly two teams
+    },
+    countMinesByTeam: function( game, team ) {
+        var mines = game.diamondMines,
+            count = 0;
+
+        for( var i = 0, l = mines; i < l; i++ ) {
+            if( mine.owner.team === team ) {
+                count++;
+            }
+        }
+
+        return count;
+    },
+    countUnclaimedMines: function( game ) {
+        var mines = game.diamondMines,
+            count = 0;
+
+        for( var i = 0, l = mines; i < l; i++ ) {
+            if( mine.owner === undefined ) {
+                count++;
+            }
+        }
+
+        return count;
+    },
+    countFriendlyMines: function( game ) {
+        return this.countMinesByTeam( game, game.activeHero.team );
+    },
+    countEnemyMines: function( game ) {
+        return this.countMinesByTeam( game, !game.activeHero.team );
+    },
+    myTeamHasMoreDiamonds: function( game ) {
+        var team = game.activeHero.team;
+
+        return game.totalTeamDiamonds[ team ] > game.totalTeamDiamons[ !team ];
+    },
+    myTeamHasMoreHeroes: function( game ) {
+        return this.countAllies( game ) > this.countEnemies( game );
+    },
+    myTeamHasMoreMines: function( game ) {
+        return this.countFriendlyMines( game ) > this.countEnemyMines( game );
+    }
 }
 
 module.exports = helpers;
